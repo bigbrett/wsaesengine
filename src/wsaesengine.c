@@ -79,6 +79,7 @@ static int wsaescbcengine_aescbc_init_key(EVP_CIPHER_CTX *ctx, const unsigned ch
     int ret; 
     printf("** wsaescbcengine_aescbc_init_key()\n");
 
+#if SIMPLEPRINT != 1
     ret = aes256init();
 	if (0 != ret)
 	{
@@ -99,7 +100,7 @@ static int wsaescbcengine_aescbc_init_key(EVP_CIPHER_CTX *ctx, const unsigned ch
 		fprintf(stderr,"ERROR: failed to set iv in aes256setkey()\n");
         return FAIL;
 	}
-    
+#endif  
 	return SUCCESS;
 }
 
@@ -109,28 +110,136 @@ static int wsaescbcengine_aescbc_init_key(EVP_CIPHER_CTX *ctx, const unsigned ch
  */
 static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char *in, size_t inl)
 {
+    printf("wsaescbcengine_aescbc_do_cipher()");
+#if SIMPLEPRINT != 1
     int status;
     uint32_t outlen;
-    ciphermode_t mode; 
+    ciphermode_t mode = (!ctx->encrypt) ? DECRYPT : ENCRYPT; 
 
-    if (!ctx->encrypt)
-        mode = DECRYPT;
-    else 
-        mode = ENCRYPT;
+    //aes256(mode, (uint8_t*)in, (uint32_t)inl, (uint8_t*)out, &outlen);
 
-    status = aes256(mode, (uint8_t*)in, (uint32_t)inl, (uint8_t*)out, &outlen);
-    printf("aes256 called in do_cipher(), returned value [%d]\n",status);
     return 0;
-    //switch(EVP_CIPHER_CTX_nid(ctx)) 
-    //{
-    //    case NID_aes_256_cbc:
-    //        break
+    // check bounds against max length 
+    if (inlen > AESMAXDATASIZE)
+    {
+        fprintf(stderr, "ERROR: Provided data length (%d) too large, must be less than %d bytes\n",
+                inlen, AESMAXDATASIZE);
+        return -1;
+    }
+    else if (0 >= inlen)
+    {
+        fprintf(stderr, "ERROR: Provided data length (%d) too small, must be at least 1 bytes\n",
+                inlen);
+        return -1;
+    }
 
-    //    default:
-    //        fprintf(stderr, "ERROR, no cipher specified in do_cipher\n");  
-    //        return FAIL;
+    // Open the device with read/write access
+    fd = open("/dev/wsaeschar", O_RDWR);             
+    if (fd < 0){
+        perror("ERROR: Failed to open the device...");
+        return errno;
+    }
 
-    //}
+    // Reset block 
+    ret = ioctl(fd, IOCTL_SET_MODE, RESET); 
+    if (ret < 0) {
+        perror("ERROR: failed to reset AES block... \n");
+        return errno;
+    }
+
+    // Set mode to ENCRYPT/DECRYPT
+    if (mode != ENCRYPT && mode != DECRYPT)
+    {
+        fprintf(stderr, "ERROR: invalid mode. Must be either ENCRYPT or DECRYPT\n");
+        return -1;
+    }
+    else
+    {
+        ret = ioctl(fd, IOCTL_SET_MODE, (ciphermode_t)mode); 
+        if (ret < 0) {
+            perror("ERROR: failed to set mode, ioctl returns errno \n");
+            return errno;
+        }
+    }
+
+    int orignumbytes = *lenp - AESBLKSIZE; // The original number of bytes in the input data
+    uint8_t lastblock[AESBLKSIZE]; // the last block to send if we are encrypting ONLY.  
+
+    // if we are encrypting the data, we must deal with padding the data to encrypt
+    if (mode == ENCRYPT)
+    {
+        int modlen = inlen % AESBLKSIZE;     // number of data bytes in last block
+        int numpadbytes = AESBLKSIZE-modlen; // number of padding bytes in last block
+
+        // set output length to the nearest non-zero multiple of the block size
+        *lenp = inlen + numpadbytes; 
+
+        // loop boundary for looping through the blocks
+        orignumbytes = *lenp - AESBLKSIZE;
+
+        // Construct the "last block" of data to send, composed of the last straggling bytes that don't fit evenly into the 
+        // 16-byte block size. This "last block" is padded out to the block size with a number of "padding bytes", whose values 
+        // are all set to the number of padding bits required. So there will be X bytes with a value of X. The value of the 
+        // padding bytes are all the same, and is just the number of padding bytes required to fill out the last 16-byte block. 
+        // So if there are 4 data bytes (0xBE 0xEE 0xEE 0xEF) left to send in the last block, we then need 12 padding bytes, each
+        // with the value of value 0x0C (or 12, in base 10). If the data length is an integer multiple of the block size, then 
+        // we just send the message, and the "last block" is 16 bytes of just padding bits (0x10, decimal 16)
+        for (int i=0; i<AESBLKSIZE; i++)
+            lastblock[i] = (i < modlen) ? inp[orignumbytes + i] : numpadbytes;
+    }     
+    else 
+    { // we are not incrypting, so don't need to pad data. Data length is unmodified, just loop through the input data
+        *lenp = inlen;
+        orignumbytes = inlen;
+    }
+
+    // initialize output memory to all zeros
+    memset((void*)outp,0,*lenp);
+   
+    // MAIN DATA SENDING LOOP: 
+    // send each complete 16-byte block of data to the LKM for processing and read back the result
+    for (int i=0; i<orignumbytes; i+=AESBLKSIZE)
+    {
+        // send 16 byte block from caller to AES block
+        ret = write(fd, &(inp[i]), AESBLKSIZE); 
+        if (ret < 0) {
+            perror("ERROR: Failed to write data to the AES block... ");   
+            return errno;                                                      
+        }
+
+        // read back processed 16 byte block into caller memory from AES block
+        ret = read(fd, &(outp[i]), AESBLKSIZE);
+        if (ret < 0){
+            perror("Failed to read data back from the AES block... ");
+            return errno;
+        }
+    }    
+
+    // if we are encrypting the data, deal with the extra padding bytes
+    if (mode == ENCRYPT)
+    {
+        // send final padded block
+        ret = write(fd, lastblock, AESBLKSIZE); 
+        if (ret < 0) {
+            perror("ERROR: Failed to write data to the AES block... ");   
+            return errno;                                                      
+        }
+        // read back processed final padded block
+        ret = read(fd, &(outp[orignumbytes]), AESBLKSIZE);
+        if (ret < 0){
+            perror("Failed to read data back from the AES block... ");
+            return errno;
+        }
+    }
+
+    // close and exit
+    if(close(fd)<0)
+    {
+        perror("aescbc: Error closing file");
+        return errno;
+    }
+#endif
+    return SUCCESS;
 }
 
 
@@ -142,8 +251,10 @@ static int wsaescbcengine_aescbc_cleanup(EVP_CIPHER_CTX *ctx)
 {
 
     printf("** wsaescbcengine_aescbc_cleanup()\n");
+#if SIMPLEPRINT != 1
 	if (ctx->cipher_data)
 		memset(ctx->cipher_data, 0, 32);
+#endif
 	return SUCCESS;
 }
 
@@ -209,7 +320,10 @@ static int wsaescbcengine_cipher_selector(ENGINE *e, const EVP_CIPHER**cipher, c
 int wsaescbc_init(ENGINE *e)
 {
     printf("** wsaescbc_init()\n");
-	return aes256init();
+#if SIMPLEPRINT != 1
+    int status = aes256init();
+#endif  
+	return status;
 }
 
 
