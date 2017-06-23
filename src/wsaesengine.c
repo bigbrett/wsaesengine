@@ -195,7 +195,7 @@ static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *o
         // with the value of value 0x0C (or 12, in base 10). If the data length is an integer multiple of the block size, then 
         // we just send the message, and the "last block" is 16 bytes of just padding bits (0x10, decimal 16)
         for (int i=0; i<AESBLKSIZE; i++)
-            lastblock[i] = (i < modlen) ? inp[orignumbytes + i] : numpadbytes;
+            lastblock[i] = (i < modlen) ? in[orignumbytes + i] : numpadbytes;
     }     
     else 
     { // we are not incrypting, so don't need to pad data. Data length is unmodified, just loop through the input data
@@ -211,7 +211,7 @@ static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *o
     for (int i=0; i<orignumbytes; i+=AESBLKSIZE)
     {
         // send 16 byte block from caller to AES block
-        ret = write(fd, &(inp[i]), AESBLKSIZE); 
+        ret = write(fd, &(in[i]), AESBLKSIZE); 
         if (ret < 0) {
             perror("ERROR: Failed to write data to the AES block... ");   
             return errno;                                                      
