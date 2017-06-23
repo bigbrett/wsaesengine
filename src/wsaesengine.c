@@ -1,8 +1,17 @@
 #include <openssl/engine.h>
+
 #include <stdio.h>
-#include <string.h>
-#include <stdint.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdint.h>
+#include <sys/ioctl.h>
+
+#include "wsaescbc.h"
+#include "wsaeskern.h"
+
 
 #include "wsaescbc.h"
 
