@@ -121,7 +121,7 @@ static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *o
 {
     printf("wsaescbcengine_aescbc_do_cipher()");
 #if SIMPLEPRINT != 1
-    int status;
+    int status, fd;
     uint32_t outlen;
     ciphermode_t mode = (!ctx->encrypt) ? DECRYPT : ENCRYPT; 
 
