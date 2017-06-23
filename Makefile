@@ -17,7 +17,7 @@ TESTSOURCES := $(shell find $(TESTDIR) -type f -name "*.$(SRCEXT)")
 TESTCFLAGS := -g -Wall
 
 CFLAGS := -Wall -fPIC
-LIB := `pkg-config --libs openssl` -L$(LIBDIR) -lwssha
+LIB := `pkg-config --libs openssl` -L$(LIBDIR) -lwsaescbc
 INC := -I include 
 
 all: $(OUTDIR)/$(TARGET) $(OUTDIR)/$(TESTTARGET)

@@ -9,18 +9,18 @@
 // Turn off this annoying warning that we don't care about 
 #pragma GCC diagnostic ignored "-Wsizeof-pointer-memaccess"
 
-#define FAIL 0
-#define SUCCESS 1
+#define FAIL -1
+#define SUCCESS 0
 
 
 static const char *engine_id = "wsaescbc";
 static const char *engine_name = "A test engine for the ws aescbc hardware encryption module, on the Xilinx ZYNQ7000";
-static int wsaescbc_digest_ids[] = {NID_aescbc,0};
+static int wsaescbc_digest_ids[] = {NID_aes_256_cbc,0};
 
-static int wsaescbcengine_aescbc_init_key(CIPHER_CTX *ctx, const unsigned char *key, const unsigned char *iv, int enc);
+static int wsaescbcengine_aescbc_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key, const unsigned char *iv, int enc);
 static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char *in, size_t inl);
-static int wsaescbcengine_aescbc_cleanup(EVP_MD_CTX *ctx);
-static int wsaescbcengine_aescbc_ctrl (EVP_CIPHER_CTX *, int type, int arg, void *ptr);
+static int wsaescbcengine_aescbc_cleanup(EVP_CIPHER_CTX *ctx);
+//static int wsaescbcengine_aescbc_ctrl (EVP_CIPHER_CTX *, int type, int arg, void *ptr);
 //static int wsaescbcengine_aescbc_set_asn1_parameters (EVP_CIPHER_CTX *, ASN1_TYPE *);
 //static int wsaescbcengine_aescbc_get_asn1_parameters (EVP_CIPHER_CTX *, ASN1_TYPE *);
 
@@ -54,23 +54,125 @@ static int wsaescbcengine_aescbc_ctrl (EVP_CIPHER_CTX *, int type, int arg, void
 //} /* EVP_CIPHER */ ;
 static const EVP_CIPHER wsaescbcengine_aescbc_method = 
 {
-	NID_aescbc, // openSSL algorithm numerical ID
+	NID_aes_256_cbc, // openSSL algorithm numerical ID
 	AESBLKSIZE, // block size
 	AESKEYSIZE, // key length
 	AESIVSIZE,  // iv length 
-	0 | EVP_CIPH_CBC_MODE, // flags...TODO this should change
+	0 | EVP_CIPH_CBC_MODE, // flags...TODO this should not be hardcoded
 	wsaescbcengine_aescbc_init_key, // key initialization function pointer
 	wsaescbcengine_aescbc_do_cipher, // do_cipher (encrypt/decrypt data)
 	wsaescbcengine_aescbc_cleanup, // cleanup (cleanup ctx)
 	AESMAXDATASIZE, // ctx_size (how large cipher data needs to be)
 	EVP_CIPHER_set_asn1_iv, // set_asn1_parameters Pupulate a ASN1_type with parameters
 	EVP_CIPHER_set_asn1_iv, // get_asn1_parameters get ASN1_TYPE parameters
-	wsaescbcengine_aescbc_ctrl, // ctrl: misc. operations
+	NULL,//wsaescbcengine_aescbc_ctrl, // ctrl: misc. operations
 	NULL // pointer to application data to encrypt
 }; 
 
-//{NID_undef, NID_undef, 0,0,0}, // required pkey type 
 
+/*
+ * Digest initialization function
+ */
+static int wsaescbcengine_aescbc_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key, 
+										  const unsigned char *iv, int enc)
+{
+    int ret; 
+    printf("** wsaescbcengine_aescbc_init_key()\n");
+
+    ret = aes256init();
+	if (0 != ret)
+	{
+		fprintf(stderr,"ERROR: AES block could not be initialized\n");
+		return FAIL;
+	}
+    
+    ret = aes256setkey((uint8_t*)key);
+    if (0 != ret)
+	{
+		fprintf(stderr,"ERROR: failed to set key in aes256setkey()\n");
+        return FAIL;
+	}
+    
+    ret = aes256setiv((uint8_t*)iv);
+    if (0 != ret)
+	{
+		fprintf(stderr,"ERROR: failed to set iv in aes256setkey()\n");
+        return FAIL;
+	}
+    
+	return SUCCESS;
+}
+
+
+/*
+ * Cipher computation
+ */
+static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char *in, size_t inl)
+{
+    //switch(EVP_CIPHER_CTX_nid(ctx)) 
+    //{
+    //    case NID_aes_256_cbc:
+    //        break
+
+    //    default:
+    //        fprintf(stderr, "ERROR, no cipher specified in do_cipher\n");  
+    //        return FAIL;
+
+    //}
+    return SUCCESS;
+}
+
+
+
+/*
+ * AES EVP_CIPHER_CTX cleanup function: sets all fields to zero
+ */
+static int wsaescbcengine_aescbc_cleanup(EVP_CIPHER_CTX *ctx) 
+{
+
+    printf("** wsaescbcengine_aescbc_cleanup()\n");
+	if (ctx->cipher_data)
+		memset(ctx->cipher_data, 0, 32);
+	return SUCCESS;
+}
+
+
+/* 
+ * Cipher selection function: tells openSSL that whenever a evp cypher is 
+ * reauested to use our engine implementation 
+ * 
+ * OpenSSL calls this function in the following ways:
+ *   1. with cipher argument being NULL. In this case, *nids is expected to be assigned a 
+ *		  zero-terminated array of NIDs and the call returns with the number of available NIDs. 
+ * 		  OpenSSL uses this to determine what ciphers supported by this engine.
+ * 	 2. with cipher argument being non-NULL. In this case, *cipher is expected to be assigned the pointer 
+ * 			to the EVP_CIPHER structure corresponding to the NID given by nid. The call returns with 1 if 
+ * 			the request NID was one supported by this engine, otherwise returns 0.
+ */
+static int wsaescbcengine_cipher_selector(ENGINE *e, const EVP_CIPHER**cipher, const int **nids, int nid)
+{
+    printf("** wsaescbcengine_cipher_selector()\n");
+    // if cipher is null, return 0-terminated array of supported NIDs
+    if (!cipher)
+    {
+        *nids = wsaescbc_digest_ids;
+        int retnids = sizeof(wsaescbc_digest_ids - 1) / sizeof(wsaescbc_digest_ids[0]);
+        return retnids;
+    }
+
+    // if cipher is supported, select our implementation, otherwise set to null and fail 
+    switch (nid) 
+    {
+        case NID_aes_256_cbc:
+            *cipher = &wsaescbcengine_aescbc_method; 
+            break;
+        // other cases tdb
+       default:
+            *cipher = NULL;
+            return FAIL; 
+    }
+    return SUCCESS;
+}
 //struct evp_cipher_ctx_st {
 //    const EVP_CIPHER *cipher;
 //    ENGINE *engine;             /* functional reference if 'cipher' is ENGINE-provided */
@@ -91,74 +193,12 @@ static const EVP_CIPHER wsaescbcengine_aescbc_method =
 //} /* EVP_CIPHER_CTX */ ;
 
 /*
- * Digest initialization function
- */
-static int wsaescbcengine_aescbc_init_key(CIPHER_CTX *ctx, const unsigned char *key, 
-										  const unsigned char *iv, int enc);
-{
-
-	// call API initialization function
-	if (aescbc_init() < 0)
-	{
-		fprintf(stderr,"ERROR: SHA256 algorithm context could not be initialized\n");
-		return FAIL;
-	}
-	return SUCCESS;
-}
-
-
-/*
- * SHA256 EVP_MD_CTX cleanup function: sets all fields to zero
- */
-static int wsaescbcengine_aescbc_cleanup(EVP_MD_CTX *ctx) 
-{
-	if (ctx->cipher_data)
-		memset(ctx->cipher_data, 0, 32);
-	return SUCCESS;
-}
-
-
-/* 
- * Digest selection function: tells openSSL that whenever a SHA256 digest is 
- * reauested to use our engine implementation 
- * 
- * OpenSSL calls this function in the following ways:
- *   1. with digest being NULL. In this case, *nids is expected to be assigned a 
- *		  zero-terminated array of NIDs and the call returns with the number of available NIDs. 
- * 			OpenSSL uses this to determine what digests are supported by this engine.
- * 	 2. with digest being non-NULL. In this case, *digest is expected to be assigned the pointer 
- * 			to the EVP_MD structure corresponding to the NID given by nid. The call returns with 1 if 
- * 			the request NID was one supported by this engine, otherwise returns 0.
- */
-static int wsaescbcengine_digest_selector(ENGINE *e, const EVP_MD **digest, const int **nids, int nid)
-{
-	// if digest is null, return 0-terminated array of supported NIDs
-	if (!digest)
-	{
-		*nids = wsaescbc_digest_ids;
-		int retnids = sizeof(wsaescbc_digest_ids - 1) / sizeof(wsaescbc_digest_ids[0]);
-		return retnids;
-	}
-
-	// if digest is supported, select our implementation, otherwise set to null and fail 
-	if (nid == NID_aescbc)
-	{ // select our hardware digest implementation 
-		*digest = &wsaescbcengine_aescbc_method; 
-		return SUCCESS;
-	}
-	else
-	{
-		*digest = NULL;
-		return FAIL;
-	}
-}
-
-/*
  * Engine Initialization 
  */
 int wsaescbc_init(ENGINE *e)
 {
-	return aescbc_init();
+    printf("** wsaescbc_init()\n");
+	return aes256init();
 }
 
 
@@ -167,6 +207,7 @@ int wsaescbc_init(ENGINE *e)
  */
 static int bind(ENGINE *e, const char *id)
 {
+    printf("**bind()\n");
 	int ret = FAIL;
 
 	if (!ENGINE_set_id(e, engine_id))
@@ -184,7 +225,7 @@ static int bind(ENGINE *e, const char *id)
 		fprintf(stderr,"ENGINE_set_init_function failed\n"); 
 		goto end;
 	}
-	if (!ENGINE_set_digests(e, wsaescbcengine_digest_selector)) 
+	if (!ENGINE_set_ciphers(e, wsaescbcengine_cipher_selector)) 
 	{
 		fprintf(stderr,"ENGINE_set_digests failed\n");
 		goto end;
@@ -194,5 +235,5 @@ end:
 	return ret; 
 }
 
-	IMPLEMENT_DYNAMIC_BIND_FN(bind)
+IMPLEMENT_DYNAMIC_BIND_FN(bind)
 IMPLEMENT_DYNAMIC_CHECK_FN()
