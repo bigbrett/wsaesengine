@@ -150,7 +150,7 @@ static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *o
     }
 
     // Reset block 
-    ret = ioctl(fd, IOCTL_SET_MODE, RESET); 
+    int ret = ioctl(fd, IOCTL_SET_MODE, RESET); 
     if (ret < 0) {
         perror("ERROR: failed to reset AES block... \n");
         return errno;
@@ -171,7 +171,8 @@ static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *o
         }
     }
 
-    int orignumbytes = *lenp - AESBLKSIZE; // The original number of bytes in the input data
+    int orignumbytes; // The original number of bytes in the input data
+    int olen; // output length
     uint8_t lastblock[AESBLKSIZE]; // the last block to send if we are encrypting ONLY.  
 
     // if we are encrypting the data, we must deal with padding the data to encrypt
@@ -181,10 +182,10 @@ static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *o
         int numpadbytes = AESBLKSIZE-modlen; // number of padding bytes in last block
 
         // set outut length to the nearest non-zero multiple of the block size
-        *lenp = inl + numpadbytes; 
+        olen = inl + numpadbytes; 
 
         // loop boundary for looping through the blocks
-        orignumbytes = *lenp - AESBLKSIZE;
+        orignumbytes = olen - AESBLKSIZE;
 
         // Construct the "last block" of data to send, composed of the last straggling bytes that don't fit evenly into the 
         // 16-byte block size. This "last block" is padded out to the block size with a number of "padding bytes", whose values 
@@ -198,12 +199,12 @@ static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *o
     }     
     else 
     { // we are not incrypting, so don't need to pad data. Data length is unmodified, just loop through the input data
-        *lenp = inl;
+        olen = inl;
         orignumbytes = inl;
     }
 
     // initialize outut memory to all zeros
-    memset((void*)out,0,*lenp);
+    memset((void*)out,0,olen);
    
     // MAIN DATA SENDING LOOP: 
     // send each complete 16-byte block of data to the LKM for processing and read back the result
