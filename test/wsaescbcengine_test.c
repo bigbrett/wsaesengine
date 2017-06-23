@@ -8,7 +8,7 @@
 
 #include "wsaescbc.h"
 
-#define LOAD_ENGINE 0
+#define LOAD_ENGINE 1
 
 #define HWSUCCESS 0
 #define MAXBYTES 1048576
