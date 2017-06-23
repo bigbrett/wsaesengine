@@ -109,6 +109,18 @@ static int wsaescbcengine_aescbc_init_key(EVP_CIPHER_CTX *ctx, const unsigned ch
  */
 static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char *in, size_t inl)
 {
+    int status;
+    uint32_t outlen;
+    ciphermode_t mode; 
+
+    if (!ctx->encrypt)
+        mode = DECRYPT;
+    else 
+        mode = ENCRYPT;
+
+    status = aes256(mode, (uint8_t*)in, (uint32_t)inl, (uint8_t*)out, &outlen);
+    printf("aes256 called in do_cipher(), returned value [%d]\n",status);
+    return 0;
     //switch(EVP_CIPHER_CTX_nid(ctx)) 
     //{
     //    case NID_aes_256_cbc:
@@ -119,7 +131,6 @@ static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *o
     //        return FAIL;
 
     //}
-    return SUCCESS;
 }
 
 
