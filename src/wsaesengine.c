@@ -323,7 +323,7 @@ int wsaescbc_init(ENGINE *e)
 #if SIMPLEPRINT != 1
     int status = aes256init();
 #endif  
-	return status;
+	return SUCCESS;
 }
 
 
