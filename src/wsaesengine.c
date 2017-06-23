@@ -129,16 +129,16 @@ static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *o
 
     return 0;
     // check bounds against max length 
-    if (inlen > AESMAXDATASIZE)
+    if (inl > AESMAXDATASIZE)
     {
         fprintf(stderr, "ERROR: Provided data length (%d) too large, must be less than %d bytes\n",
-                inlen, AESMAXDATASIZE);
+                inl, AESMAXDATASIZE);
         return -1;
     }
-    else if (0 >= inlen)
+    else if (0 >= inl)
     {
         fprintf(stderr, "ERROR: Provided data length (%d) too small, must be at least 1 bytes\n",
-                inlen);
+                inl);
         return -1;
     }
 
@@ -177,11 +177,11 @@ static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *o
     // if we are encrypting the data, we must deal with padding the data to encrypt
     if (mode == ENCRYPT)
     {
-        int modlen = inlen % AESBLKSIZE;     // number of data bytes in last block
+        int modlen = inl % AESBLKSIZE;     // number of data bytes in last block
         int numpadbytes = AESBLKSIZE-modlen; // number of padding bytes in last block
 
-        // set output length to the nearest non-zero multiple of the block size
-        *lenp = inlen + numpadbytes; 
+        // set outut length to the nearest non-zero multiple of the block size
+        *lenp = inl + numpadbytes; 
 
         // loop boundary for looping through the blocks
         orignumbytes = *lenp - AESBLKSIZE;
@@ -198,12 +198,12 @@ static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *o
     }     
     else 
     { // we are not incrypting, so don't need to pad data. Data length is unmodified, just loop through the input data
-        *lenp = inlen;
-        orignumbytes = inlen;
+        *lenp = inl;
+        orignumbytes = inl;
     }
 
-    // initialize output memory to all zeros
-    memset((void*)outp,0,*lenp);
+    // initialize outut memory to all zeros
+    memset((void*)out,0,*lenp);
    
     // MAIN DATA SENDING LOOP: 
     // send each complete 16-byte block of data to the LKM for processing and read back the result
@@ -217,7 +217,7 @@ static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *o
         }
 
         // read back processed 16 byte block into caller memory from AES block
-        ret = read(fd, &(outp[i]), AESBLKSIZE);
+        ret = read(fd, &(out[i]), AESBLKSIZE);
         if (ret < 0){
             perror("Failed to read data back from the AES block... ");
             return errno;
@@ -234,7 +234,7 @@ static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *o
             return errno;                                                      
         }
         // read back processed final padded block
-        ret = read(fd, &(outp[orignumbytes]), AESBLKSIZE);
+        ret = read(fd, &(out[orignumbytes]), AESBLKSIZE);
         if (ret < 0){
             perror("Failed to read data back from the AES block... ");
             return errno;
