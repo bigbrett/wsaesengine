@@ -25,6 +25,7 @@ const uint8_t iv[AESIVSIZE] =   { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07
 // string to encrypt
 const char teststr[] = "The Quick Brown Fox Jumped Over The Lazy Dog!"; 
 
+
 static void aesErr(char *msg) {
     char *err = malloc(130);
     ERR_load_crypto_strings();
@@ -194,6 +195,11 @@ int main(int argc, char* argv[])
 		exit(EXIT_FAILURE);
     }
 
+    printf("encrypted text = ");
+    for (int i=0; i<encrypted_length; i++)
+        printf("0x%02X ",encrypted[i]);
+    printf("\n\n");
+
     status = wsdecrypt( (uint8_t*)encrypted, encrypted_length, (uint8_t*)key, 
                         (uint8_t*)iv, (uint8_t*)decrypted, &decrypted_length);
 	if(0 != status || decrypted_length == 0) {
@@ -210,6 +216,11 @@ int main(int argc, char* argv[])
             printf("\t****Error, incorrect digest value at element %i!\n",i);
         }
     }
+
+    printf("decrypted text = ");
+    for (int i=0; i<datalen; i++)
+        printf("%c",decrypted[i]);
+    printf("\n");
 
     // report erroneous values
     if (errcnt == 0)
