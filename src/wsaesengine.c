@@ -90,7 +90,7 @@ static int wsaescbcengine_aescbc_init_key(EVP_CIPHER_CTX *ctx, const unsigned ch
     int ret; 
     printf("** wsaescbcengine_aescbc_init_key()\n");
 
-#if SIMPLEPRINT != 1
+//#if SIMPLEPRINT != 1
     ret = aes256init();
 	if (0 != ret)
 	{
@@ -111,7 +111,7 @@ static int wsaescbcengine_aescbc_init_key(EVP_CIPHER_CTX *ctx, const unsigned ch
 		fprintf(stderr,"ERROR: failed to set iv in aes256setkey()\n");
         return FAIL;
 	}
-#endif  
+//#endif  
 	return SUCCESS;
 }
 
