@@ -58,18 +58,18 @@ int32_t aes256setkey(uint8_t *keyp)
     //printf("setting key\n");
     ret = ioctl(fd, IOCTL_SET_MODE, SET_KEY); // switch mode 
     if (ret < 0) {
-        perror("Failed to set mode.");
+        perror("ERROR: Failed to set mode.");
         return errno;
     }
     ret = write(fd, keyp, AESKEYSIZE); // write key 
     if (ret < 0) {
-        perror("Failed to write KEY to the device.");
+        perror("ERROR: Failed to write KEY to the device.");
         return errno;
     }
 
     // close and exit
     if(close(fd)<0)
-        perror("aescbc: Error closing file");
+        perror("ERROR: Error closing file");
 
     return 0;
 }
@@ -91,18 +91,18 @@ int32_t aes256setiv(uint8_t *ivp)
     //printf("setting IV\n");
     ret = ioctl(fd, IOCTL_SET_MODE, SET_IV); // switch mode 
     if (ret < 0) {
-        perror("Failed to set mode.");
+        perror("ERROR: Failed to set mode.");
         return errno;
     }
     ret = write(fd, ivp, AESIVSIZE); // write IV
     if (ret < 0) {
-        perror("Failed to write IV to the device.");
+        perror("ERROR: Failed to write IV to the device.");
         return errno;
     }
     
     // close and exit
     if(close(fd)<0)
-        perror("aescbc: Error closing file");
+        perror("ERROR: Error closing file");
 
     return 0;
 }
