@@ -22,7 +22,7 @@
 #define FAIL 0
 #define SUCCESS 1
 
-#define SIMPLEPRINT 0
+#define SIMPLEPRINT 1
 
 static const char *engine_id = "wsaescbc";
 static const char *engine_name = "A test engine for the ws aescbc hardware encryption module, on the Xilinx ZYNQ7000";
