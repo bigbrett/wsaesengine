@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
 	status = wsencrypt( (uint8_t*)teststr, (uint32_t)strlen(teststr), (uint8_t*)key, 
                         (uint8_t*)iv, (uint8_t*)encrypted, &encrypted_length, eng);
 	if(0 != status || encrypted_length == 0) {
-		printf("\nEncrypt failed");
+		printf("\nEncrypt failed\n");
 		exit(EXIT_FAILURE);
     }
 
@@ -201,7 +201,7 @@ int main(int argc, char* argv[])
     status = wsdecrypt( (uint8_t*)encrypted, encrypted_length, (uint8_t*)key, 
                         (uint8_t*)iv, (uint8_t*)decrypted, &decrypted_length, eng);
 	if(0 != status || decrypted_length == 0) {
-		printf("\nDecrypt failed");
+		printf("\nDecrypt failed\n");
 		exit(EXIT_FAILURE);
     }
 
