@@ -228,6 +228,13 @@ int wsaescbc_init(ENGINE *e)
 }
 
 
+int wsaescbc_finish(ENGINE *e)
+{
+    printf("** wsaescbc_finish()\n");
+    return SUCCESS;
+}
+
+
 /*
  *  Engine binding function
  */
@@ -249,6 +256,11 @@ static int bind(ENGINE *e, const char *id)
 	if (!ENGINE_set_init_function(e, wsaescbc_init))
 	{
 		fprintf(stderr,"ENGINE_set_init_function failed\n"); 
+		goto end;
+	}
+    if (!ENGINE_set_finish_function(e, wsaescbc_finish))
+	{
+		fprintf(stderr,"ENGINE_set_finish_function failed\n"); 
 		goto end;
 	}
 	if (!ENGINE_set_ciphers(e, wsaescbcengine_cipher_selector)) 
