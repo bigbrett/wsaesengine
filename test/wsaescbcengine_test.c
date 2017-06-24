@@ -36,7 +36,7 @@ static void aesErr(char *msg) {
 
 static int32_t wsencrypt(uint8_t *plaintext, uint32_t plaintext_len,
         uint8_t *key,uint8_t *iv,
-        uint8_t *ciphertext,uint32_t *ciphertext_lenp) {
+        uint8_t *ciphertext,uint32_t *ciphertext_lenp, ENGINE* eng) {
     EVP_CIPHER_CTX *ctx;
     int len;
     uint32_t ciphertext_len;
@@ -48,8 +48,7 @@ static int32_t wsencrypt(uint8_t *plaintext, uint32_t plaintext_len,
      * In this example we are using 256 bit AES (i.e. a 256 bit key). The
      * IV size for *most* modes is the same as the block size. For AES this
      * is 128 bits */
-    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL,
-                (unsigned char*)key, (unsigned char*)iv))
+    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), eng, (unsigned char*)key, (unsigned char*)iv))
         aesErr("wsencrypt init");
     /* Provide the message to be encrypted, and obtain the encrypted output.
      * EVP_EncryptUpdate can be called multiple times if necessary
@@ -72,7 +71,7 @@ static int32_t wsencrypt(uint8_t *plaintext, uint32_t plaintext_len,
 
 static int32_t wsdecrypt(uint8_t *ciphertext,uint32_t ciphertext_len,
         uint8_t *key,uint8_t *iv,
-        uint8_t *plaintext,uint32_t *plaintext_lenp) {
+        uint8_t *plaintext,uint32_t *plaintext_lenp, ENGINE* eng) {
     EVP_CIPHER_CTX *ctx;
     int len;
     uint32_t plaintext_len;
@@ -84,8 +83,7 @@ static int32_t wsdecrypt(uint8_t *ciphertext,uint32_t ciphertext_len,
      * In this example we are using 256 bit AES (i.e. a 256 bit key). The
      * IV size for *most* modes is the same as the block size. For AES this
      * is 128 bits */
-    if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL,
-                (unsigned char*)key, (unsigned char*)iv))
+    if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), eng, (unsigned char*)key, (unsigned char*)iv))
         aesErr("wsdecrypt init");
     /* Provide the message to be decrypted, and obtain the plaintext output.
      * EVP_DecryptUpdate can be called multiple times if necessary
@@ -189,7 +187,7 @@ int main(int argc, char* argv[])
     memcpy(data, teststr, datalen);
 
 	status = wsencrypt( (uint8_t*)teststr, (uint32_t)strlen(teststr), (uint8_t*)key, 
-                        (uint8_t*)iv, (uint8_t*)encrypted, &encrypted_length);
+                        (uint8_t*)iv, (uint8_t*)encrypted, &encrypted_length, eng);
 	if(0 != status || encrypted_length == 0) {
 		printf("\nEncrypt failed");
 		exit(EXIT_FAILURE);
@@ -201,7 +199,7 @@ int main(int argc, char* argv[])
     printf("\n\n");
 
     status = wsdecrypt( (uint8_t*)encrypted, encrypted_length, (uint8_t*)key, 
-                        (uint8_t*)iv, (uint8_t*)decrypted, &decrypted_length);
+                        (uint8_t*)iv, (uint8_t*)decrypted, &decrypted_length, eng);
 	if(0 != status || decrypted_length == 0) {
 		printf("\nDecrypt failed");
 		exit(EXIT_FAILURE);
