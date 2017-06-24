@@ -18,18 +18,19 @@
 // Turn off this annoying warning that we don't care about 
 #pragma GCC diagnostic ignored "-Wsizeof-pointer-memaccess"
 
-#define FAIL -1
-#define SUCCESS 0
+// TODO we need to sort out proper return values
+#define FAIL 0
+#define SUCCESS 1
 #define SIMPLEPRINT 1
 
 static const char *engine_id = "wsaescbc";
 static const char *engine_name = "A test engine for the ws aescbc hardware encryption module, on the Xilinx ZYNQ7000";
-static int wsaescbc_digest_ids[] = {NID_aes_256_cbc,0};
+static int wsaescbc_nids[] = {NID_aes_256_cbc};
 
 static int wsaescbcengine_aescbc_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key, const unsigned char *iv, int enc);
 static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char *in, size_t inl);
 static int wsaescbcengine_aescbc_cleanup(EVP_CIPHER_CTX *ctx);
-//static int wsaescbcengine_aescbc_ctrl (EVP_CIPHER_CTX *, int type, int arg, void *ptr);
+static int wsaescbcengine_aescbc_ctrl (EVP_CIPHER_CTX *, int type, int arg, void *ptr);
 //static int wsaescbcengine_aescbc_set_asn1_parameters (EVP_CIPHER_CTX *, ASN1_TYPE *);
 //static int wsaescbcengine_aescbc_get_asn1_parameters (EVP_CIPHER_CTX *, ASN1_TYPE *);
 
@@ -74,7 +75,7 @@ static const EVP_CIPHER wsaescbcengine_aescbc_method =
 	AESMAXDATASIZE, // ctx_size (how large cipher data needs to be)
 	EVP_CIPHER_set_asn1_iv, // set_asn1_parameters Pupulate a ASN1_type with parameters
 	EVP_CIPHER_set_asn1_iv, // get_asn1_parameters get ASN1_TYPE parameters
-	NULL,//wsaescbcengine_aescbc_ctrl, // ctrl: misc. operations
+	wsaescbcengine_aescbc_ctrl, // ctrl: misc. operations
 	NULL // pointer to application data to encrypt
 }; 
 
@@ -287,8 +288,8 @@ static int wsaescbcengine_cipher_selector(ENGINE *e, const EVP_CIPHER**cipher, c
     // if cipher is null, return 0-terminated array of supported NIDs
     if (!cipher)
     {
-        *nids = wsaescbc_digest_ids;
-        int retnids = sizeof(wsaescbc_digest_ids - 1) / sizeof(wsaescbc_digest_ids[0]);
+        *nids = wsaescbc_nids;
+        int retnids = sizeof(wsaescbc_nids - 1) / sizeof(wsaescbc_nids[0]);
         return retnids;
     }
 
@@ -323,6 +324,15 @@ static int wsaescbcengine_cipher_selector(ENGINE *e, const EVP_CIPHER**cipher, c
 //    int block_mask;
 //    unsigned char final[EVP_MAX_BLOCK_LENGTH]; /* possible final block */
 //} /* EVP_CIPHER_CTX */ ;
+
+
+
+static int wsaescbcengine_aescbc_ctrl (EVP_CIPHER_CTX *, int type, int arg, void *ptr)
+{
+    printf("**wsaescbcengine_aescbc_ctrl()\n");
+    return SUCCESS;
+}
+
 
 /*
  * Engine Initialization 
