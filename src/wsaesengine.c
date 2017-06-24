@@ -30,7 +30,7 @@ static int wsaescbc_nids[] = {NID_aes_256_cbc};
 static int wsaescbcengine_aescbc_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key, const unsigned char *iv, int enc);
 static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char *in, size_t inl);
 static int wsaescbcengine_aescbc_cleanup(EVP_CIPHER_CTX *ctx);
-static int wsaescbcengine_aescbc_ctrl (EVP_CIPHER_CTX *, int type, int arg, void *ptr);
+static int wsaescbcengine_aescbc_ctrl (EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr);
 //static int wsaescbcengine_aescbc_set_asn1_parameters (EVP_CIPHER_CTX *, ASN1_TYPE *);
 //static int wsaescbcengine_aescbc_get_asn1_parameters (EVP_CIPHER_CTX *, ASN1_TYPE *);
 
@@ -327,7 +327,7 @@ static int wsaescbcengine_cipher_selector(ENGINE *e, const EVP_CIPHER**cipher, c
 
 
 
-static int wsaescbcengine_aescbc_ctrl (EVP_CIPHER_CTX *, int type, int arg, void *ptr)
+static int wsaescbcengine_aescbc_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
 {
     printf("**wsaescbcengine_aescbc_ctrl()\n");
     return SUCCESS;
