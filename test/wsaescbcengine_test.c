@@ -186,24 +186,28 @@ int main(int argc, char* argv[])
 		
     memcpy(data, teststr, datalen);
 
+
+    printf("\n################### ENCRYPTING ########################\n");
 	status = wsencrypt( (uint8_t*)teststr, (uint32_t)strlen(teststr), (uint8_t*)key, 
                         (uint8_t*)iv, (uint8_t*)encrypted, &encrypted_length, eng);
 	if(0 != status || encrypted_length == 0) {
 		printf("\nEncrypt failed\n");
 		exit(EXIT_FAILURE);
     }
-
+    printf("\n################### DONE ENCRYPTING########################\n");
     printf("encrypted text = ");
     for (int i=0; i<encrypted_length; i++)
         printf("0x%02X ",encrypted[i]);
     printf("\n\n");
 
+    printf("\n################### DECRYPTING########################\n");
     status = wsdecrypt( (uint8_t*)encrypted, encrypted_length, (uint8_t*)key, 
                         (uint8_t*)iv, (uint8_t*)decrypted, &decrypted_length, eng);
 	if(0 != status || decrypted_length == 0) {
 		printf("\nDecrypt failed\n");
 		exit(EXIT_FAILURE);
     }
+    printf("\n################### DONE DECRYPTING########################\n");
 
     int errcnt=0;
     for (int i=0; i < datalen; i++)
