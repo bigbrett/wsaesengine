@@ -53,14 +53,12 @@ static int32_t wsencrypt(uint8_t *plaintext, uint32_t plaintext_len,
     /* Provide the message to be encrypted, and obtain the encrypted output.
      * EVP_EncryptUpdate can be called multiple times if necessary
      */
-    if(1 != EVP_EncryptUpdate(ctx, (unsigned char*)ciphertext, &len,
-                (unsigned char*)plaintext, (int)plaintext_len))
+    if(1 != EVP_EncryptUpdate(ctx, (unsigned char*)ciphertext, &len, (unsigned char*)plaintext, (int)plaintext_len))
         aesErr("wsencrypt update");
     ciphertext_len = (uint32_t)len;
     /* Finalise the encryption. Further ciphertext bytes may be written at
      * this stage.  */
-    if(1 != EVP_EncryptFinal_ex(ctx, ((unsigned char*)ciphertext) + len, &len))
-        aesErr("wsencrypt final");
+    if(1 != EVP_EncryptFinal_ex(ctx, ((unsigned char*)ciphertext) + len, &len)) aesErr("wsencrypt final");
     ciphertext_len += (uint32_t)len;
     /* Clean up */
     EVP_CIPHER_CTX_free(ctx);
@@ -88,16 +86,16 @@ static int32_t wsdecrypt(uint8_t *ciphertext,uint32_t ciphertext_len,
     /* Provide the message to be decrypted, and obtain the plaintext output.
      * EVP_DecryptUpdate can be called multiple times if necessary
      */
-    if(1 != EVP_DecryptUpdate(ctx, (unsigned char*)plaintext, &len,
-                (unsigned char*)ciphertext, (int)ciphertext_len))
+    if(1 != EVP_DecryptUpdate(ctx, (unsigned char*)plaintext, &len, (unsigned char*)ciphertext, (int)ciphertext_len))
         aesErr("wsdecrypt update");
     plaintext_len = (uint32_t)len;
     /* Finalise the decryption. Further plaintext bytes may be written at
      * this stage.
      */
-    if(1 != EVP_DecryptFinal_ex(ctx, ((unsigned char*)plaintext + len), &len)) 
+    //if(1 != EVP_DecryptFinal_ex(ctx, ((unsigned char*)plaintext + len), &len)) 
+    if(1 != EVP_DecryptFinal_ex(ctx, ((unsigned char*)plaintext), &len)) 
         aesErr("wsdecrypt final");
-    plaintext_len += (uint32_t)len;
+    //plaintext_len += (uint32_t)len;
     /* Clean up */
     EVP_CIPHER_CTX_free(ctx);
     *plaintext_lenp = plaintext_len;
