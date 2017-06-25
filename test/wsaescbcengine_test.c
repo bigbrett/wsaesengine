@@ -61,7 +61,8 @@ static int32_t wsencrypt(uint8_t *plaintext, uint32_t plaintext_len,
     /* Finalise the encryption. Further ciphertext bytes may be written at
      * this stage.  */
     printf("EVP_EncryptFinal_ex()\n");
-    if(1 != EVP_EncryptFinal_ex(ctx, ((unsigned char*)ciphertext) + len, &len)) aesErr("wsencrypt final");
+    if(1 != EVP_EncryptFinal_ex(ctx, ((unsigned char*)ciphertext) + len, &len)) 
+        aesErr("wsencrypt final");
     ciphertext_len += (uint32_t)len;
     /* Clean up */
     EVP_CIPHER_CTX_free(ctx);
@@ -180,18 +181,13 @@ int main(int argc, char* argv[])
     printf("*TEST: Initialized engine [%s]\n\tinit result = %d\n",ENGINE_get_name(eng), status);
 #endif
 
-   	uint8_t data[MAXBYTES];
 	int datalen = strlen(teststr);
-
 	uint8_t encrypted[MAXBYTES+1024];
 	uint8_t decrypted[MAXBYTES+1024];
 	uint32_t encrypted_length, decrypted_length;
-		
-    memcpy(data, teststr, datalen);
-
 
     printf("\n################### ENCRYPTING ########################\n");
-	status = wsencrypt( (uint8_t*)teststr, (uint32_t)strlen(teststr), (uint8_t*)key, 
+	status = wsencrypt( (uint8_t*)teststr, (uint32_t)datalen, (uint8_t*)key, 
                         (uint8_t*)iv, (uint8_t*)encrypted, &encrypted_length, eng);
 	if(0 != status || encrypted_length == 0) {
 		printf("\nEncrypt failed\n");
@@ -201,7 +197,7 @@ int main(int argc, char* argv[])
     printf("encrypted text = ");
     for (int i=0; i<encrypted_length; i++)
         printf("0x%02X ",encrypted[i]);
-    printf("\n\n");
+    printf("\nencrypted length = %d\n\n",encrypted_length);
 
     printf("\n################### DECRYPTING########################\n");
     status = wsdecrypt( (uint8_t*)encrypted, encrypted_length, (uint8_t*)key, 
@@ -212,6 +208,13 @@ int main(int argc, char* argv[])
     }
     printf("\n################### DONE DECRYPTING########################\n");
 
+    for (int i=0; i<decrypted_length; i++)
+        printf("0x%02X ",decrypted[i]);
+    printf("\ndecrypted length = %d\n\n",decrypted_length);
+    printf("Or, in plaintext: \n");
+    for (int i=0; i<decrypted_length; i++)
+        printf("%c",decrypted[i]);
+    printf("\n\n");
     int errcnt=0;
     for (int i=0; i < datalen; i++)
     {
