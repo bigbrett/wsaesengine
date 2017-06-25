@@ -158,43 +158,43 @@ int32_t aes256(int mode, uint8_t *inp, uint32_t inlen, uint8_t *outp, uint32_t *
         }
     }
 
-    int orignumbytes; // The original number of bytes in the input data
-    uint8_t lastblock[AESBLKSIZE]; // the last block to send if we are encrypting ONLY.  
-
-    // if we are encrypting the data, we must deal with padding the data to encrypt
-    if (mode == ENCRYPT)
-    {
-        int modlen = inlen % AESBLKSIZE;     // number of data bytes in last block
-        int numpadbytes = AESBLKSIZE-modlen; // number of padding bytes in last block
-
-        // set output length to the nearest non-zero multiple of the block size
-        *lenp = inlen + numpadbytes; 
-
-        // loop boundary for looping through the blocks
-        orignumbytes = *lenp - AESBLKSIZE;
-
-        // Construct the "last block" of data to send, composed of the last straggling bytes that don't fit evenly into the 
-        // 16-byte block size. This "last block" is padded out to the block size with a number of "padding bytes", whose values 
-        // are all set to the number of padding bits required. So there will be X bytes with a value of X. The value of the 
-        // padding bytes are all the same, and is just the number of padding bytes required to fill out the last 16-byte block. 
-        // So if there are 4 data bytes (0xBE 0xEE 0xEE 0xEF) left to send in the last block, we then need 12 padding bytes, each
-        // with the value of value 0x0C (or 12, in base 10). If the data length is an integer multiple of the block size, then 
-        // we just send the message, and the "last block" is 16 bytes of just padding bits (0x10, decimal 16)
-        for (int i=0; i<AESBLKSIZE; i++)
-            lastblock[i] = (i < modlen) ? inp[orignumbytes + i] : numpadbytes;
-    }     
-    else 
-    { // we are not incrypting, so don't need to pad data. Data length is unmodified, just loop through the input data
-        *lenp = inlen;
-        orignumbytes = inlen;
-    }
-
+//    int orignumbytes; // The original number of bytes in the input data
+//    uint8_t lastblock[AESBLKSIZE]; // the last block to send if we are encrypting ONLY.  
+//
+//    // if we are encrypting the data, we must deal with padding the data to encrypt
+//    if (mode == ENCRYPT)
+//    {
+//        int modlen = inlen % AESBLKSIZE;     // number of data bytes in last block
+//        int numpadbytes = AESBLKSIZE-modlen; // number of padding bytes in last block
+//
+//        // set output length to the nearest non-zero multiple of the block size
+//        *lenp = inlen + numpadbytes; 
+//
+//        // loop boundary for looping through the blocks
+//        orignumbytes = *lenp - AESBLKSIZE;
+//
+//        // Construct the "last block" of data to send, composed of the last straggling bytes that don't fit evenly into the 
+//        // 16-byte block size. This "last block" is padded out to the block size with a number of "padding bytes", whose values 
+//        // are all set to the number of padding bits required. So there will be X bytes with a value of X. The value of the 
+//        // padding bytes are all the same, and is just the number of padding bytes required to fill out the last 16-byte block. 
+//        // So if there are 4 data bytes (0xBE 0xEE 0xEE 0xEF) left to send in the last block, we then need 12 padding bytes, each
+//        // with the value of value 0x0C (or 12, in base 10). If the data length is an integer multiple of the block size, then 
+//        // we just send the message, and the "last block" is 16 bytes of just padding bits (0x10, decimal 16)
+//        for (int i=0; i<AESBLKSIZE; i++)
+//            lastblock[i] = (i < modlen) ? inp[orignumbytes + i] : numpadbytes;
+//    }     
+//    else 
+//    { // we are not incrypting, so don't need to pad data. Data length is unmodified, just loop through the input data
+//        *lenp = inlen;
+//        orignumbytes = inlen;
+//    }
+    *lenp = inlen;
     // initialize output memory to all zeros
     memset((void*)outp,0,*lenp);
    
     // MAIN DATA SENDING LOOP: 
     // send each complete 16-byte block of data to the LKM for processing and read back the result
-    for (int i=0; i<orignumbytes; i+=AESBLKSIZE)
+    for (int i=0; i<inlen; i+=AESBLKSIZE)
     {
         // send 16 byte block from caller to AES block
         ret = write(fd, &(inp[i]), AESBLKSIZE); 
@@ -211,22 +211,22 @@ int32_t aes256(int mode, uint8_t *inp, uint32_t inlen, uint8_t *outp, uint32_t *
         }
     }    
 
-    // if we are encrypting the data, deal with the extra padding bytes
-    if (mode == ENCRYPT)
-    {
-        // send final padded block
-        ret = write(fd, lastblock, AESBLKSIZE); 
-        if (ret < 0) {
-            perror("ERROR: Failed to write data to the AES block... ");   
-            return errno;                                                      
-        }
-        // read back processed final padded block
-        ret = read(fd, &(outp[orignumbytes]), AESBLKSIZE);
-        if (ret < 0){
-            perror("Failed to read data back from the AES block... ");
-            return errno;
-        }
-    }
+//    // if we are encrypting the data, deal with the extra padding bytes
+//    if (mode == ENCRYPT)
+//    {
+//        // send final padded block
+//        ret = write(fd, lastblock, AESBLKSIZE); 
+//        if (ret < 0) {
+//            perror("ERROR: Failed to write data to the AES block... ");   
+//            return errno;                                                      
+//        }
+//        // read back processed final padded block
+//        ret = read(fd, &(outp[orignumbytes]), AESBLKSIZE);
+//        if (ret < 0){
+//            perror("Failed to read data back from the AES block... ");
+//            return errno;
+//        }
+//    }
 
     // close and exit
     if(close(fd)<0)
