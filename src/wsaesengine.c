@@ -19,7 +19,7 @@
 #pragma GCC diagnostic ignored "-Wsizeof-pointer-memaccess"
 
 // TODO we need to sort out proper return values
-#define FAIL 0
+#define FAIL -1
 #define SUCCESS 1
 
 static const char *engine_id = "wsaescbc";
@@ -134,7 +134,11 @@ static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *o
         printf("0x%02X ",out[i]);
     printf("\n\toutlen= %d\n",outlen);
 
-    return 0;
+    if (status != 0)
+        return FAIL;
+    else
+        return SUCCESS;
+
 }
 
 
