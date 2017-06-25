@@ -98,10 +98,10 @@ static int32_t wsdecrypt(uint8_t *ciphertext,uint32_t ciphertext_len,
     /* Finalise the decryption. Further plaintext bytes may be written at
      * this stage.
      */
-    //printf("EVP_DecryptFinal_ex()\n");
-    //if(1 != EVP_DecryptFinal_ex(ctx, ((unsigned char*)plaintext + len), &len)) 
-    //    aesErr("wsdecrypt final");
-    //plaintext_len += (uint32_t)len;
+    printf("EVP_DecryptFinal_ex()\n");
+    if(1 != EVP_DecryptFinal_ex(ctx, ((unsigned char*)plaintext + len), &len)) 
+        aesErr("wsdecrypt final");
+    plaintext_len += (uint32_t)len;
     /* Clean up */
     EVP_CIPHER_CTX_free(ctx);
     *plaintext_lenp = plaintext_len;
@@ -210,6 +210,7 @@ int main(int argc, char* argv[])
     }
     printf("\n################### DONE DECRYPTING########################\n");
 
+    printf("decrypted text = \n");
     for (int i=0; i<decrypted_length; i++)
         printf("0x%02X ",decrypted[i]);
     printf("\ndecrypted length = %d\n\n",decrypted_length);
