@@ -92,10 +92,9 @@ static int32_t wsdecrypt(uint8_t *ciphertext,uint32_t ciphertext_len,
     /* Finalise the decryption. Further plaintext bytes may be written at
      * this stage.
      */
-    //if(1 != EVP_DecryptFinal_ex(ctx, ((unsigned char*)plaintext + len), &len)) 
-    if(1 != EVP_DecryptFinal_ex(ctx, ((unsigned char*)plaintext), &len)) 
+    if(1 != EVP_DecryptFinal_ex(ctx, ((unsigned char*)plaintext + len), &len)) 
         aesErr("wsdecrypt final");
-    //plaintext_len += (uint32_t)len;
+    plaintext_len += (uint32_t)len;
     /* Clean up */
     EVP_CIPHER_CTX_free(ctx);
     *plaintext_lenp = plaintext_len;
