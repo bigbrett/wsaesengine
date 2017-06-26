@@ -23,15 +23,12 @@ You can verify that the engine can be loaded using:
 
 ## Testing the engine
 ### Quck test
-A quick and easy test goes like this, where the resultant digest values should be identical: 
+A quick and easy test goes like this, where the output of the decryption should match the input: 
 
-    $ teststr="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec vel nulla malesuada, dictum diam ut, semper sapien. Etiam faucibus porttitor tristique. Vestibulum id magna sed velit ornare varius vitae nec erat. Mauris dui arcu, pulvinar eu pretium posuere."
-    
-    $ echo $teststr | openssl dgst -engine /full/path/to/libwsaescbcengine.so -aescbc
-      (stdin)= 28ed684090a0df4a70fd2ac9249a5cb13ddda6f34055148b739cd3b668445cf9
-    
-    $ echo $teststr | openssl dgst -aescbc
-      (stdin)= 28ed684090a0df4a70fd2ac9249a5cb13ddda6f34055148b739cd3b668445cf9
+    $ msg="OpenSSL has poor documentation!"; key="01234567890123456789012345678901"; iv="01234567890123456"
+    $ echo $msg | openssl enc -e -aes-256-cbc -K $key -iv $iv | openssl enc -d -aes-256-cbc -K $key -iv $iv
+      OpenSSL has poor documentation!
+      
 
 ### Custom Test
 A more advanced test, using a c test program, can be conducted like this (see test/wsaescbcengine_test.c for implementation): 
@@ -44,6 +41,6 @@ NOTE: the runtest.sh script must remain in the test directory, but should be abl
 ### OpenSSL speed test
 The speed of the engine's digest computation can be tested using the built-in openSSL speed command (making sure to explicitly specify using the EVP API for the message digest)
 
-    $ openssl speed -evp aescbc -engine /path/to/libwsaescbcengine.so
+    $ openssl speed -evp aes-256-cbc -engine /path/to/libwsaescbcengine.so
 
 
