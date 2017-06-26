@@ -5,7 +5,7 @@
 
 /* AES-256 -- returns a status value */
 
-#define AESMAXDATASIZE 256
+#define AESMAXDATASIZE 1048576 //1MB of data
 #define AESBLKSIZE 16
 #define AESIVSIZE 16
 #define AESKEYSIZE 32
