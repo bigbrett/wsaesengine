@@ -69,7 +69,7 @@ static int32_t wsencrypt(uint8_t *plaintext, uint32_t plaintext_len,
     /* Finalise the encryption. Further ciphertext bytes may be written at
      * this stage.  */
 
-    printf("TEST: EVP_EncryptFinal_ex(ciphertext + %d, ...)\n",len);
+    printf("TEST: CALLING EVP_EncryptFinal_ex(ciphertext + %d, ...)\n",len);
     unsigned char* testptr = ((unsigned char*)ciphertext) + len;
 
     if(1 != EVP_EncryptFinal_ex(ctx, ((unsigned char*)ciphertext) + len, &len)) 
@@ -106,23 +106,43 @@ static int32_t wsdecrypt(uint8_t *ciphertext,uint32_t ciphertext_len,
      * In this example we are using 256 bit AES (i.e. a 256 bit key). The
      * IV size for *most* modes is the same as the block size. For AES this
      * is 128 bits */
-    printf("EVP_DecryptInit_ex()\n");
+    printf("TEST: EVP_DecryptInit_ex()\n");
     if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), eng, (unsigned char*)key, (unsigned char*)iv))
         aesErr("wsdecrypt init");
     /* Provide the message to be decrypted, and obtain the plaintext output.
      * EVP_DecryptUpdate can be called multiple times if necessary
      */
-    printf("EVP_DecryptUpdate()\n");
+    printf("TEST: CALLING EVP_DecryptUpdate...()\n");
     if(1 != EVP_DecryptUpdate(ctx, (unsigned char*)plaintext, &len, (unsigned char*)ciphertext, (int)ciphertext_len))
         aesErr("wsdecrypt update");
+
+    printf("TEST: EVP_DecryptUpdate() returned \n\tplaintext[%d] = ",len);
+    for (int i=0; i<len; i++)
+        printf("0x%02X ",plaintext[i]);
+    printf("\n");
+
     plaintext_len = (uint32_t)len;
+    printf("TEST: plaintext_len = len = %d\n",len);
+
     /* Finalise the decryption. Further plaintext bytes may be written at
      * this stage.
      */
-    printf("EVP_DecryptFinal_ex()\n");
+    printf("TEST: CALLING EVP_DecryptFinal_ex(plaintext + %d,...)\n",len);
+    unsigned char* testptr = ((unsigned char*)plaintext) + len;
+
     if(1 != EVP_DecryptFinal_ex(ctx, ((unsigned char*)plaintext + len), &len)) 
         aesErr("wsdecrypt final");
+
+    printf("TEST: EVP_DecryptFinal() returned \n\tplaintext+len[%d] = ",len);
+    for (int i=0; i<len; i++) {
+        printf("0x%02X ",*testptr);
+        testptr++;
+    }
+    printf("\n");
+
     plaintext_len += (uint32_t)len;
+    printf("TEST: plaintext_len += len = %d\n",ciphertext_len);
+
     /* Clean up */
     EVP_CIPHER_CTX_free(ctx);
     *plaintext_lenp = plaintext_len;
