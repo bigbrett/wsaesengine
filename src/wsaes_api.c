@@ -26,10 +26,10 @@ static const char *devicefname = "/dev/wsaeschar";
  */
 int32_t aes256init(void)
 {
-    printf("Checking for kernel module...\n");
+    //printf("Checking for kernel module...\n");
     if( access( devicefname, F_OK ) != -1 ) 
     {
-        printf("Found device!\n");
+        //printf("Found device!\n");
         return 0;
     } 
     else 

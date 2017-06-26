@@ -86,7 +86,7 @@ static int wsaescbcengine_aescbc_init_key(EVP_CIPHER_CTX *ctx, const unsigned ch
 										  const unsigned char *iv, int enc)
 {
     int ret; 
-    printf("** wsaescbcengine_aescbc_init_key()\n");
+    //printf("** wsaescbcengine_aescbc_init_key()\n");
 
     ret = aes256init();
 	if (0 != ret)
@@ -125,22 +125,22 @@ static int wsaescbcengine_aescbc_init_key(EVP_CIPHER_CTX *ctx, const unsigned ch
  */
 static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char *in, size_t inl)
 {
-    printf("wsaescbcengine_aescbc_do_cipher()\n");
+    //printf("wsaescbcengine_aescbc_do_cipher()\n");
 
     int status;
     uint32_t outlen;
 
     ciphermode_t mode = (!ctx->encrypt) ? DECRYPT : ENCRYPT; 
-    printf("calling aes256 with args:\n\tmode = %d\n\tin = ",mode);
-    for (int i=0; i<inl; i++)
-        printf("0x%02X ",in[i]);
-    printf("\n\tinlen = %d\n",inl);
+    //printf("calling aes256 with args:\n\tmode = %d\n\tin = ",mode);
+    //for (int i=0; i<inl; i++)
+    //    printf("0x%02X ",in[i]);
+    //printf("\n\tinlen = %d\n",inl);
 
     status = aes256(mode, (uint8_t*)in, (uint32_t)inl, (uint8_t*)out, &outlen);
-    printf("aes256 completed with status = %d\n\tout = ",status);
-    for (int i=0; i<outlen; i++)
-        printf("0x%02X ",out[i]);
-    printf("\n\toutlen= %d\n",outlen);
+    //printf("aes256 completed with status = %d\n\tout = ",status);
+    //for (int i=0; i<outlen; i++)
+    //    printf("0x%02X ",out[i]);
+    //printf("\n\toutlen= %d\n",outlen);
 
     if (status != 0)
         return FAIL;
@@ -157,7 +157,7 @@ static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *o
 static int wsaescbcengine_aescbc_cleanup(EVP_CIPHER_CTX *ctx) 
 {
 
-    printf("** wsaescbcengine_aescbc_cleanup()\n");
+    //printf("** wsaescbcengine_aescbc_cleanup()\n");
 	if (ctx->cipher_data)
 		memset(ctx->cipher_data, 0, 32);
 	return SUCCESS;
@@ -178,7 +178,7 @@ static int wsaescbcengine_aescbc_cleanup(EVP_CIPHER_CTX *ctx)
  */
 static int wsaescbcengine_cipher_selector(ENGINE *e, const EVP_CIPHER**cipher, const int **nids, int nid)
 {
-    printf("** wsaescbcengine_cipher_selector()\n");
+    //printf("** wsaescbcengine_cipher_selector()\n");
     // if cipher is null, return 0-terminated array of supported NIDs
     if (!cipher)
     {
@@ -233,7 +233,7 @@ static int wsaescbcengine_cipher_selector(ENGINE *e, const EVP_CIPHER**cipher, c
  */
 int wsaescbc_init(ENGINE *e)
 {
-    printf("** wsaescbc_init()\n");
+    //printf("** wsaescbc_init()\n");
     if (aes256init() < 0)
         return FAIL;
     return SUCCESS;
@@ -242,7 +242,7 @@ int wsaescbc_init(ENGINE *e)
 
 int wsaescbc_finish(ENGINE *e)
 {
-    printf("** wsaescbc_finish()\n");
+    //printf("** wsaescbc_finish()\n");
     return SUCCESS;
 }
 
@@ -252,7 +252,7 @@ int wsaescbc_finish(ENGINE *e)
  */
 static int bind(ENGINE *e, const char *id)
 {
-    printf("**bind()\n");
+    //printf("**bind()\n");
 	int ret = FAIL;
 
 	if (!ENGINE_set_id(e, engine_id))
