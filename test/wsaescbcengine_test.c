@@ -141,7 +141,7 @@ static int32_t wsdecrypt(uint8_t *ciphertext,uint32_t ciphertext_len,
     printf("\n");
 
     plaintext_len += (uint32_t)len;
-    printf("TEST: plaintext_len += len = %d\n",ciphertext_len);
+    printf("TEST: plaintext_len += len = %d\n",plaintext_len);
 
     /* Clean up */
     EVP_CIPHER_CTX_free(ctx);
@@ -227,7 +227,10 @@ int main(int argc, char* argv[])
 	uint8_t decrypted[MAXBYTES+1024];
 	uint32_t encrypted_length, decrypted_length;
 
-    printf("Initial datalen = %d\n",datalen);
+    printf("Initial_plaintext = \n");
+    for (int i=0; i<datalen; i++)
+        printf("0x%02X ",teststr[i]);
+    printf("\nplaintext length = %d\n",datalen);
 
     printf("\n################### ENCRYPTING ########################\n");
 	status = wsencrypt( (uint8_t*)teststr, (uint32_t)datalen, (uint8_t*)key, 
