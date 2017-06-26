@@ -3,8 +3,7 @@
  * @author Derek Molloy
  * @date   7 April 2015
  * @version 0.1
- * @brief  A Linux user space program that communicates with the wsaescbckern.c LKM. It passes a
- * string to the LKM and reads the response from the LKM. For this example to work the device
+ * @brief  A Linux user space program that communicates with the wsaescbckern.c LKM. It passes a * string to the LKM and reads the response from the LKM. For this example to work the device
  * must be called /dev/wsaeschar.
  * @see http://www.derekmolloy.ie/ for a full description and follow-up descriptions.
  */
@@ -109,6 +108,35 @@ int32_t aes256setiv(uint8_t *ivp)
 
 
 /*
+ *
+ */
+int32_t aes256reset(void)
+{
+    int fd, ret = 0;
+    // Open the device with read/write access
+    fd = open("/dev/wsaeschar", O_RDWR);             
+    if (fd < 0){
+        perror("ERROR: Failed to open the device...");
+        return errno;
+    }
+
+    // Reset block 
+    ret = ioctl(fd, IOCTL_SET_MODE, RESET); 
+    if (ret < 0) {
+        perror("ERROR: failed to reset AES block... \n");
+        return errno;
+    }
+
+    // close and exit
+    if(close(fd)<0)
+        perror("ERROR: Error closing file");
+
+    return 0;
+}
+
+
+
+/*
  * 
  */
 int32_t aes256(int mode, uint8_t *inp, uint32_t inlen, uint8_t *outp, uint32_t *lenp) 
@@ -136,12 +164,12 @@ int32_t aes256(int mode, uint8_t *inp, uint32_t inlen, uint8_t *outp, uint32_t *
         return errno;
     }
 
-    // Reset block 
-    ret = ioctl(fd, IOCTL_SET_MODE, RESET); 
-    if (ret < 0) {
-        perror("ERROR: failed to reset AES block... \n");
-        return errno;
-    }
+    //// Reset block 
+    //ret = ioctl(fd, IOCTL_SET_MODE, RESET); 
+    //if (ret < 0) {
+    //    perror("ERROR: failed to reset AES block... \n");
+    //    return errno;
+    //}
 
     // Set mode to ENCRYPT/DECRYPT
     if (mode != ENCRYPT && mode != DECRYPT)
