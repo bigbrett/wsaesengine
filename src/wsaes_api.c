@@ -190,7 +190,7 @@ int32_t aes256(int mode, uint8_t *inp, uint32_t inlen, uint8_t *outp, uint32_t *
 //    }
     *lenp = inlen;
     // initialize output memory to all zeros
-    memset((void*)outp,0,*lenp);
+    memset((void*)outp, 0, inlen);
    
     // MAIN DATA SENDING LOOP: 
     // send each complete 16-byte block of data to the LKM for processing and read back the result
