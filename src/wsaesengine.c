@@ -91,23 +91,31 @@ static int wsaescbcengine_aescbc_init_key(EVP_CIPHER_CTX *ctx, const unsigned ch
     ret = aes256init();
 	if (0 != ret)
 	{
-		fprintf(stderr,"ERROR: AES block could not be initialized\n");
+		fprintf(stderr,"ERROR: AES block could not be initialized in ngine init_key\n");
 		return FAIL;
 	}
     
     ret = aes256setkey((uint8_t*)key);
     if (0 != ret)
 	{
-		fprintf(stderr,"ERROR: failed to set key in aes256setkey()\n");
+		fprintf(stderr,"ERROR: failed to set key in engine init_key()\n");
         return FAIL;
 	}
     
     ret = aes256setiv((uint8_t*)iv);
     if (0 != ret)
 	{
-		fprintf(stderr,"ERROR: failed to set iv in aes256setkey()\n");
+		fprintf(stderr,"ERROR: failed to set iv in engine init_key\n");
         return FAIL;
 	}
+
+    ret = aes256reset();
+    if (0 != ret)
+	{
+		fprintf(stderr,"ERROR: failed to reset in engine init_key()\n");
+        return FAIL;
+	}
+
 	return SUCCESS;
 }
 
