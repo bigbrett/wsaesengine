@@ -6,14 +6,14 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "wsaescbc.h"
+#include "wsaes.h"
 
 #define LOAD_ENGINE 1
 
 #define HWSUCCESS 0
 #define MAXBYTES 1048576
 
-static const char* engine_id = "wsaescbcengine";
+static const char* engine_id = "wsaesengine";
 const char* devstr = "/dev/wsaeschar";
 
 const uint8_t key[AESKEYSIZE] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
@@ -210,7 +210,7 @@ int main(int argc, char* argv[])
         fprintf(stderr,"*TEST: ERROR, COULD NOT LOAD ENGINE:\n\tSO_PATH = %s\n\tID = %s\n", engine_so_path, engine_id);
         exit(1);
     }
-    printf("wsaescbcEngine successfully loaded:\n\tSO_PATH = %s\n\tID = %s\n", engine_so_path, engine_id);
+    printf("wsaes Engine successfully loaded:\n\tSO_PATH = %s\n\tID = %s\n", engine_so_path, engine_id);
 
     // initialize engine 
     status = ENGINE_init(eng); 

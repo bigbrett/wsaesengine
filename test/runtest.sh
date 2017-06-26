@@ -3,8 +3,8 @@
 # Get important paths
 projdir=$(dirname "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )")
 bindir="$projdir/bin" 
-so_path="$bindir/libwsaescbcengine.so"
-test_exec="$bindir/wsaescbcenginetest"
+so_path="$bindir/libwsaesengine.so"
+test_exec="$bindir/wsaesenginetest"
 
 echo "*******************************************"
 echo "Running test script:"

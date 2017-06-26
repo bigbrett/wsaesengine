@@ -9,11 +9,11 @@
 #include <stdint.h>
 #include <sys/ioctl.h>
 
-#include "wsaescbc.h"
+#include "wsaes.h"
 #include "wsaeskern.h"
 
 
-#include "wsaescbc.h"
+#include "wsaes.h"
 
 // Turn off this annoying warning that we don't care about 
 #pragma GCC diagnostic ignored "-Wsizeof-pointer-memaccess"
@@ -22,16 +22,16 @@
 #define FAIL -1
 #define SUCCESS 1
 
-static const char *engine_id = "wsaescbc";
+static const char *engine_id = "wsaes";
 static const char *engine_name = "A test engine for the ws aescbc hardware encryption module, on the Xilinx ZYNQ7000";
-static int wsaescbc_nids[] = {NID_aes_256_cbc};
+static int wsaes_nids[] = {NID_aes_256_cbc};
 
-static int wsaescbcengine_aescbc_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key, const unsigned char *iv, int enc);
-static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char *in, size_t inl);
-static int wsaescbcengine_aescbc_cleanup(EVP_CIPHER_CTX *ctx);
-//tatic int wsaescbcengine_aescbc_ctrl (EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr);
-//static int wsaescbcengine_aescbc_set_asn1_parameters (EVP_CIPHER_CTX *, ASN1_TYPE *);
-//static int wsaescbcengine_aescbc_get_asn1_parameters (EVP_CIPHER_CTX *, ASN1_TYPE *);
+static int wsaesengine_aescbc_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key, const unsigned char *iv, int enc);
+static int wsaesengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char *in, size_t inl);
+static int wsaesengine_aescbc_cleanup(EVP_CIPHER_CTX *ctx);
+//tatic int wsaesengine_aescbc_ctrl (EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr);
+//static int wsaesengine_aescbc_set_asn1_parameters (EVP_CIPHER_CTX *, ASN1_TYPE *);
+//static int wsaesengine_aescbc_get_asn1_parameters (EVP_CIPHER_CTX *, ASN1_TYPE *);
 
 
 // Create our own evp cipher declaration matching that of the generic cipher 
@@ -61,20 +61,20 @@ static int wsaescbcengine_aescbc_cleanup(EVP_CIPHER_CTX *ctx);
 //    /* Application data */
 //    void *app_data;
 //} /* EVP_CIPHER */ ;
-static const EVP_CIPHER wsaescbcengine_aescbc_method = 
+static const EVP_CIPHER wsaesengine_aescbc_method = 
 {
 	NID_aes_256_cbc, // openSSL algorithm numerical ID
 	AESBLKSIZE, // block size
 	AESKEYSIZE, // key length
 	AESIVSIZE,  // iv length 
 	0 | EVP_CIPH_CBC_MODE, // flags...TODO this should not be hardcoded
-	wsaescbcengine_aescbc_init_key, // key initialization function pointer
-	wsaescbcengine_aescbc_do_cipher, // do_cipher (encrypt/decrypt data)
-	wsaescbcengine_aescbc_cleanup, // cleanup (cleanup ctx)
+	wsaesengine_aescbc_init_key, // key initialization function pointer
+	wsaesengine_aescbc_do_cipher, // do_cipher (encrypt/decrypt data)
+	wsaesengine_aescbc_cleanup, // cleanup (cleanup ctx)
 	AESMAXDATASIZE, // ctx_size (how large cipher data needs to be)
 	EVP_CIPHER_set_asn1_iv, // set_asn1_parameters Pupulate a ASN1_type with parameters
 	EVP_CIPHER_set_asn1_iv, // get_asn1_parameters get ASN1_TYPE parameters
-	NULL,//wsaescbcengine_aescbc_ctrl, // ctrl: misc. operations
+	NULL,//wsaesengine_aescbc_ctrl, // ctrl: misc. operations
 	NULL // pointer to application data to encrypt
 }; 
 
@@ -82,11 +82,11 @@ static const EVP_CIPHER wsaescbcengine_aescbc_method =
 /*
  * Digest initialization function
  */
-static int wsaescbcengine_aescbc_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key, 
+static int wsaesengine_aescbc_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key, 
 										  const unsigned char *iv, int enc)
 {
     int ret; 
-    //printf("** wsaescbcengine_aescbc_init_key()\n");
+    //printf("** wsaesengine_aescbc_init_key()\n");
 
     ret = aes256init();
 	if (0 != ret)
@@ -123,9 +123,9 @@ static int wsaescbcengine_aescbc_init_key(EVP_CIPHER_CTX *ctx, const unsigned ch
 /*
  * Cipher computation
  */
-static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char *in, size_t inl)
+static int wsaesengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char *in, size_t inl)
 {
-    //printf("wsaescbcengine_aescbc_do_cipher()\n");
+    //printf("wsaesengine_aescbc_do_cipher()\n");
 
     int status;
     uint32_t outlen;
@@ -154,10 +154,10 @@ static int wsaescbcengine_aescbc_do_cipher(EVP_CIPHER_CTX *ctx, unsigned char *o
 /*
  * AES EVP_CIPHER_CTX cleanup function: sets all fields to zero
  */
-static int wsaescbcengine_aescbc_cleanup(EVP_CIPHER_CTX *ctx) 
+static int wsaesengine_aescbc_cleanup(EVP_CIPHER_CTX *ctx) 
 {
 
-    //printf("** wsaescbcengine_aescbc_cleanup()\n");
+    //printf("** wsaesengine_aescbc_cleanup()\n");
 	if (ctx->cipher_data)
 		memset(ctx->cipher_data, 0, 32);
 	return SUCCESS;
@@ -176,14 +176,14 @@ static int wsaescbcengine_aescbc_cleanup(EVP_CIPHER_CTX *ctx)
  * 			to the EVP_CIPHER structure corresponding to the NID given by nid. The call returns with 1 if 
  * 			the request NID was one supported by this engine, otherwise returns 0.
  */
-static int wsaescbcengine_cipher_selector(ENGINE *e, const EVP_CIPHER**cipher, const int **nids, int nid)
+static int wsaesengine_cipher_selector(ENGINE *e, const EVP_CIPHER**cipher, const int **nids, int nid)
 {
-    //printf("** wsaescbcengine_cipher_selector()\n");
+    //printf("** wsaesengine_cipher_selector()\n");
     // if cipher is null, return 0-terminated array of supported NIDs
     if (!cipher)
     {
-        *nids = wsaescbc_nids;
-        int retnids = sizeof(wsaescbc_nids - 1) / sizeof(wsaescbc_nids[0]);
+        *nids = wsaes_nids;
+        int retnids = sizeof(wsaes_nids - 1) / sizeof(wsaes_nids[0]);
         return retnids;
     }
 
@@ -191,7 +191,7 @@ static int wsaescbcengine_cipher_selector(ENGINE *e, const EVP_CIPHER**cipher, c
     switch (nid) 
     {
         case NID_aes_256_cbc:
-            *cipher = &wsaescbcengine_aescbc_method; 
+            *cipher = &wsaesengine_aescbc_method; 
             break;
         // other cases tdb
        default:
@@ -221,9 +221,9 @@ static int wsaescbcengine_cipher_selector(ENGINE *e, const EVP_CIPHER**cipher, c
 
 
 
-//static int wsaescbcengine_aescbc_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
+//static int wsaesengine_aescbc_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
 //{
-//    printf("**wsaescbcengine_aescbc_ctrl()\n");
+//    printf("**wsaesengine_aescbc_ctrl()\n");
 //    return SUCCESS;
 //}
 
@@ -231,18 +231,18 @@ static int wsaescbcengine_cipher_selector(ENGINE *e, const EVP_CIPHER**cipher, c
 /*
  * Engine Initialization 
  */
-int wsaescbc_init(ENGINE *e)
+int wsaes_init(ENGINE *e)
 {
-    //printf("** wsaescbc_init()\n");
+    //printf("** wsaes_init()\n");
     if (aes256init() < 0)
         return FAIL;
     return SUCCESS;
 }
 
 
-int wsaescbc_finish(ENGINE *e)
+int wsaes_finish(ENGINE *e)
 {
-    //printf("** wsaescbc_finish()\n");
+    //printf("** wsaes_finish()\n");
     return SUCCESS;
 }
 
@@ -265,17 +265,17 @@ static int bind(ENGINE *e, const char *id)
 		fprintf(stderr,"ENGINE_set_name failed\n"); 
 		goto end;
 	}
-	if (!ENGINE_set_init_function(e, wsaescbc_init))
+	if (!ENGINE_set_init_function(e, wsaes_init))
 	{
 		fprintf(stderr,"ENGINE_set_init_function failed\n"); 
 		goto end;
 	}
-    if (!ENGINE_set_finish_function(e, wsaescbc_finish))
+    if (!ENGINE_set_finish_function(e, wsaes_finish))
 	{
 		fprintf(stderr,"ENGINE_set_finish_function failed\n"); 
 		goto end;
 	}
-	if (!ENGINE_set_ciphers(e, wsaescbcengine_cipher_selector)) 
+	if (!ENGINE_set_ciphers(e, wsaesengine_cipher_selector)) 
 	{
 		fprintf(stderr,"ENGINE_set_digests failed\n");
 		goto end;

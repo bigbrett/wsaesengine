@@ -1,11 +1,10 @@
 /**
- * @file   testwsaescbckern.c
- * @author Derek Molloy
+ * @file   testwsaeskern.c
+ * @author Brett Nicholas
  * @date   7 April 2015
  * @version 0.1
- * @brief  A Linux user space program that communicates with the wsaescbckern.c LKM. It passes a * string to the LKM and reads the response from the LKM. For this example to work the device
- * must be called /dev/wsaeschar.
- * @see http://www.derekmolloy.ie/ for a full description and follow-up descriptions.
+ * @brief  A Linux user space program that communicates with the wsaeskern.c LKM. It passes a * string to the LKM and reads the response from the LKM. For this example to work the device
+ * must be called /dev/waeschar.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,7 +15,7 @@
 #include <stdint.h>
 #include <sys/ioctl.h>
 
-#include "wsaescbc.h"
+#include "wsaes.h"
 #include "wsaeskern.h"
 
 static const char *devicefname = "/dev/wsaeschar";
@@ -259,7 +258,7 @@ int32_t aes256(int mode, uint8_t *inp, uint32_t inlen, uint8_t *outp, uint32_t *
     // close and exit
     if(close(fd)<0)
     {
-        perror("aescbc: Error closing file");
+        perror("aes256: Error closing file");
         return errno;
     }
 

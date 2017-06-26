@@ -6,8 +6,8 @@ LIBDIR := lib
 LIBPREFIX := lib
 TESTDIR := test
 OUTDIR := bin
-TARGET := $(LIBPREFIX)wsaescbcengine.so
-TESTTARGET := wsaescbcenginetest
+TARGET := $(LIBPREFIX)wsaesengine.so
+TESTTARGET := wsaesenginetest
  
 SRCEXT := c
 SOURCES := $(shell find $(SRCDIR) -type f -name "*.$(SRCEXT)")
@@ -18,7 +18,6 @@ TESTCFLAGS := -g -Wall
 
 CFLAGS := -Wall -fPIC
 LIB := `pkg-config --libs openssl` 
-#LIB := `pkg-config --libs openssl` -L$(LIBDIR) -lwsaescbc-zynq
 INC := -I include 
 
 all: $(OUTDIR)/$(TARGET) $(OUTDIR)/$(TESTTARGET)
