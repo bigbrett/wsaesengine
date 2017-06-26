@@ -48,22 +48,43 @@ static int32_t wsencrypt(uint8_t *plaintext, uint32_t plaintext_len,
      * In this example we are using 256 bit AES (i.e. a 256 bit key). The
      * IV size for *most* modes is the same as the block size. For AES this
      * is 128 bits */
-    printf("EVP_EncryptInit_ex()\n");
+    printf("TEST: EVP_EncryptInit_ex()\n");
     if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), eng, (unsigned char*)key, (unsigned char*)iv))
         aesErr("wsencrypt init");
     /* Provide the message to be encrypted, and obtain the encrypted output.
      * EVP_EncryptUpdate can be called multiple times if necessary
      */
-    printf("EVP_EncryptUpdate()\n");
+    printf("TEST: CALLING EVP_EncryptUpdate...()\n");
     if(1 != EVP_EncryptUpdate(ctx, (unsigned char*)ciphertext, &len, (unsigned char*)plaintext, (int)plaintext_len))
         aesErr("wsencrypt update");
+
+    printf("TEST: EVP_EncryptUpdate() returned \n\tciphertext[%d] = ",len);
+    for (int i=0; i<len; i++)
+        printf("0x%02X ",ciphertext[i]);
+    printf("\n");
+    
     ciphertext_len = (uint32_t)len;
+    printf("TEST: ciphertext_len = len = %d\n",len);
+
     /* Finalise the encryption. Further ciphertext bytes may be written at
      * this stage.  */
-    printf("EVP_EncryptFinal_ex()\n");
+
+    printf("TEST: EVP_EncryptFinal_ex(ciphertext + %d, ...)\n",len);
+    unsigned char* testptr = ((unsigned char*)ciphertext) + len;
+
     if(1 != EVP_EncryptFinal_ex(ctx, ((unsigned char*)ciphertext) + len, &len)) 
         aesErr("wsencrypt final");
+
+    printf("TEST: EVP_EncryptFinal() returned \n\tciphertext+len[%d] = ",len);
+    for (int i=0; i<len; i++) {
+        printf("0x%02X ",*testptr);
+        testptr++;
+    }
+    printf("\n");
+
     ciphertext_len += (uint32_t)len;
+    printf("TEST: ciphertext_len += len = %d\n",ciphertext_len);
+
     /* Clean up */
     EVP_CIPHER_CTX_free(ctx);
     *ciphertext_lenp = ciphertext_len;
