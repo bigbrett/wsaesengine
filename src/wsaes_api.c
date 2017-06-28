@@ -15,7 +15,7 @@
 #include <stdint.h>
 #include <sys/ioctl.h>
 
-#include "wsaes.h"
+#include "wsaes_api.h"
 #include "wsaeskern.h"
 
 static const char *devicefname = "/dev/wsaeschar";
