@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "wsaes.h"
+#include "wsaes_api.h"
 
 #define LOAD_ENGINE 1
 
