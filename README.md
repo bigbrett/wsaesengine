@@ -24,9 +24,11 @@ You can verify that the engine can be loaded using:
 A quick and easy test goes like this, where the output of the decryption should match the input: 
 
     $ msg="OpenSSL has poor documentation!"; key="01234567890123456789012345678901"; iv="01234567890123456"
-    $ epath=/path/to/libwsaesengine.so
-    $ echo $msg | openssl enc -e -aes-256-cbc -K $key -iv $iv -engine $epath | openssl enc -d -aes-256-cbc -K $key -iv $iv -engine $epath
-      OpenSSL has poor documentation!
+    $ epath=/path/to/libwsaesengine.so; encfile=/tmp/enc.bin
+    $ echo $msg | openssl enc -e -aes-256-cbc -K $key -iv $iv -engine $epath -out $encfile
+        engine "wsaescbc" set.
+    $ openssl enc -d -aes-256-cbc -K $key -iv $iv -engine $epath -in $encfile
+        OpenSSL has poor documentation!
       
 
 ### Custom Test
