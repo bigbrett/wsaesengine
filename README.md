@@ -1,6 +1,6 @@
 [![experimental](http://badges.github.io/stability-badges/dist/experimental.svg)](http://github.com/badges/stability-badges)
 # wsaesengine
-A minimal openSSL engine for offloading aescbc functions to a hardware accelerator in FPGA logic
+A minimal openSSL engine for offloading AES symmetric cipher functions to a hardware accelerator in FPGA logic
 
 ## Prerequisites
 1. You are running linux on the Xilinx ZYNQ-7000 development board, with the necessary design instantiated in PL [link to final design goes here]
